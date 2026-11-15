@@ -1,0 +1,71 @@
+spring:
+  application:
+    name: agenda-capacidade-service
+
+  datasource:
+    url: ${DB_URL:jdbc:oracle:thin:@//localhost:1521/FREEPDB1}
+    username: ${DB_USERNAME:AGENDA_CAPACIDADE}
+    password: ${DB_PASSWORD:1234}
+    driver-class-name: oracle.jdbc.OracleDriver
+    hikari:
+      pool-name: agenda-capacidade-service-pool
+      minimum-idle: 2
+      maximum-pool-size: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 25
+        order_inserts: true
+        order_updates: true
+
+  jackson:
+    time-zone: America/Sao_Paulo
+
+server:
+  port: ${SERVER_PORT:8082}
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: never
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: never
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: WARN
+    com.zaxxer.hikari: WARN
+  file:
+    name: logs/${spring.application.name}.log
+
+info:
+  app:
+    name: ${spring.application.name}
+    description: Microsservico do sistema de coleta seletiva
+    version: 1.0.0
