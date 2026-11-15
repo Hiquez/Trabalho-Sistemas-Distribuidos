@@ -18,6 +18,24 @@ services:
       start_period: 120s
     restart: unless-stopped
 
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: coleta-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+    restart: unless-stopped
+
   solicitacoes:
     build: ./solicitacoes
     container_name: coleta-solicitacoes
@@ -28,8 +46,14 @@ services:
       DB_URL: jdbc:oracle:thin:@//oracle:1521/FREEPDB1
       DB_USERNAME: SOLICITACOES
       DB_PASSWORD: ${DB_PASSWORD}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
     depends_on:
       oracle:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
   agenda:
@@ -42,8 +66,14 @@ services:
       DB_URL: jdbc:oracle:thin:@//oracle:1521/FREEPDB1
       DB_USERNAME: AGENDA_CAPACIDADE
       DB_PASSWORD: ${DB_PASSWORD}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
     depends_on:
       oracle:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
   cooperativa:
@@ -56,8 +86,14 @@ services:
       DB_URL: jdbc:oracle:thin:@//oracle:1521/FREEPDB1
       DB_USERNAME: COOPERATIVA
       DB_PASSWORD: ${DB_PASSWORD}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
     depends_on:
       oracle:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
   coletas:
@@ -70,9 +106,38 @@ services:
       DB_URL: jdbc:oracle:thin:@//oracle:1521/FREEPDB1
       DB_USERNAME: COLETAS_DESTINACAO
       DB_PASSWORD: ${DB_PASSWORD}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      S3_BUCKET: ${S3_BUCKET:-coleta-comprovantes}
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
     depends_on:
       oracle:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      localstack:
+        condition: service_started
+
+  localstack:
+    image: localstack/localstack:latest
+    container_name: coleta-localstack
+    ports:
+      - "127.0.0.1:4566:4566"
+    environment:
+      SERVICES: s3
+      AWS_DEFAULT_REGION: us-east-1
+      LOCALSTACK_AUTH_TOKEN: ${LOCALSTACK_AUTH_TOKEN}
+    volumes:
+      - localstack_data:/var/lib/localstack
+      - ./infrastructure/localstack/init:/etc/localstack/init/ready.d:ro
+    restart: unless-stopped
 
 volumes:
   oracle_data:
+  rabbitmq_data:
+  localstack_data:
