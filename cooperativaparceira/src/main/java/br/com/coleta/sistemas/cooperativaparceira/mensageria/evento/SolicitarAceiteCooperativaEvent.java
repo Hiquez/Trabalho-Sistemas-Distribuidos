@@ -1,4 +1,14 @@
 package br.com.coleta.sistemas.cooperativaparceira.mensageria.evento;
 
-public record SolicitarAceiteCooperativaEvent() {
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.UUID;
+
+public record SolicitarAceiteCooperativaEvent(
+        UUID solicitacaoId,
+        UUID reservaId,
+        String categoriaResiduo,
+        BigDecimal quantidadeEstimada,
+        Instant dataAgendada
+) {
 }

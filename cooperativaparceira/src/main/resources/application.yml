@@ -69,3 +69,10 @@ info:
     name: ${spring.application.name}
     description: Microsservico do sistema de coleta seletiva
     version: 1.0.0
+
+cooperativa:
+  simulacao:
+    taxa-recusa: 0.20
+    latencia-min-ms: 100
+    latencia-max-ms: 2000
+    taxa-falha: 0

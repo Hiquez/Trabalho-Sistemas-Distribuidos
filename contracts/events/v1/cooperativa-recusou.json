@@ -1,0 +1,13 @@
+{
+  "messageId": "2f70a270-c7e9-4d50-a26a-50bd450b8460",
+  "correlationId": "73457715-950b-448e-bfad-575ac8d58cd6",
+  "type": "CooperativaRecusou",
+  "version": 1,
+  "occurredAt": "2026-11-16T18:01:00Z",
+  "payload": {
+    "solicitacaoId": "73457715-950b-448e-bfad-575ac8d58cd6",
+    "compromissoId": "50d361b6-dc62-4274-94da-d0a924d8cfa1",
+    "motivoRecusa": "CAPACIDADE_INSUFICIENTE",
+    "dataRecusa": "2026-11-16T18:01:00Z"
+  }
+}

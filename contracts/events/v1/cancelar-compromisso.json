@@ -1,0 +1,11 @@
+{
+  "messageId": "0d8f5b7a-b99d-44bc-b9f5-13ad9a63b4d8",
+  "correlationId": "73457715-950b-448e-bfad-575ac8d58cd6",
+  "type": "CancelarCompromisso",
+  "version": 1,
+  "occurredAt": "2026-11-16T18:02:00Z",
+  "payload": {
+    "solicitacaoId": "73457715-950b-448e-bfad-575ac8d58cd6",
+    "motivoCancelamento": "PRAZO_EXPIRADO"
+  }
+}

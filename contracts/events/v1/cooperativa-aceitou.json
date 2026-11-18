@@ -1,0 +1,13 @@
+{
+  "messageId": "c6c0aa60-6577-48c1-8c46-2d52a2b12988",
+  "correlationId": "73457715-950b-448e-bfad-575ac8d58cd6",
+  "type": "CooperativaAceitou",
+  "version": 1,
+  "occurredAt": "2026-11-16T18:01:00Z",
+  "payload": {
+    "solicitacaoId": "73457715-950b-448e-bfad-575ac8d58cd6",
+    "compromissoId": "50d361b6-dc62-4274-94da-d0a924d8cfa1",
+    "reservaId": "73ab4e51-2825-433c-a153-5a70cb32d658",
+    "dataAceite": "2026-11-16T18:01:00Z"
+  }
+}

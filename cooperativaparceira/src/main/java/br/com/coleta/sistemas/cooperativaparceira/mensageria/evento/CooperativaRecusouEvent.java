@@ -1,4 +1,12 @@
 package br.com.coleta.sistemas.cooperativaparceira.mensageria.evento;
 
-public record CooperativaRecusouEvent() {
+import java.time.Instant;
+import java.util.UUID;
+
+public record CooperativaRecusouEvent(
+        UUID solicitacaoId,
+        UUID compromissoId,
+        String motivoRecusa,
+        Instant dataRecusa
+) {
 }

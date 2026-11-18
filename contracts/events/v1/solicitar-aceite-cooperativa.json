@@ -1,0 +1,14 @@
+{
+  "messageId": "6b03fa43-6285-49c9-8fd2-64d1826dd66f",
+  "correlationId": "73457715-950b-448e-bfad-575ac8d58cd6",
+  "type": "SolicitarAceiteCooperativa",
+  "version": 1,
+  "occurredAt": "2026-11-16T18:00:00Z",
+  "payload": {
+    "solicitacaoId": "73457715-950b-448e-bfad-575ac8d58cd6",
+    "reservaId": "73ab4e51-2825-433c-a153-5a70cb32d658",
+    "categoriaResiduo": "PLASTICO",
+    "quantidadeEstimada": 150.50,
+    "dataAgendada": "2026-11-20T14:00:00Z"
+  }
+}

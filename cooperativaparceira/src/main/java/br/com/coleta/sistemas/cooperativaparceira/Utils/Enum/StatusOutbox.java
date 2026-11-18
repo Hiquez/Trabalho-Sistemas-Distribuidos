@@ -1,7 +1,7 @@
 package br.com.coleta.sistemas.cooperativaparceira.Utils.Enum;
 
 public enum StatusOutbox {
-    EM_ANALISE("Em análise"),
+    PENDENTE("Pendente"),
     ACEITO("Aceito"),
     RECUSADO("Recusado"),
     CANCELADO("Cancelado");
