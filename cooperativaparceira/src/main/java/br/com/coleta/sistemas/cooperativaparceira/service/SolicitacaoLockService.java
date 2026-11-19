@@ -13,7 +13,8 @@ public class SolicitacaoLockService {
     private final InicializacaoLockService inicializacao;
     private final SolicitacaoLockRepository repository;
 
-    public void garantirExistencia(UUID solicitacaoId) {
+
+    public void iniciarLock(UUID solicitacaoId) {
         try {
             inicializacao.inicializar(solicitacaoId);
         } catch (DataIntegrityViolationException ex) {

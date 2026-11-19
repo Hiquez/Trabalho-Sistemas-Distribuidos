@@ -10,7 +10,6 @@ import br.com.coleta.sistemas.cooperativaparceira.repository.CompromissoReposito
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,6 +34,10 @@ public class CompromissoService {
 
         SolicitarAceiteCooperativaEvent evento = envelope.payload();
         UUID solicitacaoId = evento.solicitacaoId();
+
+        // Aqui vai pegar e inserir no banco a solicitação deste compromisso para que futuramente, quando haja alguma ação nele, o sistema faça o devido
+        // bloqueio para que duas cooperativas não possam manipular o mesmo registro simultaneamente.
+        solicitacaoLockService.iniciarLock(solicitacaoId);
 
         // A linha de lock deve existir antes desta transação.
         solicitacaoLockService.bloquear(solicitacaoId);
@@ -84,6 +87,7 @@ public class CompromissoService {
             UUID correlationId
     ) {
         // Mesmo lock utilizado pela criação e cancelamento.
+        // O solicitaçãoID já foi inserido na hora de criar o compromisso, então agora, basta bloquea-lo
         solicitacaoLockService.bloquear(solicitacaoId);
 
         Compromisso compromisso = compromissoRepository
