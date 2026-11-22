@@ -20,6 +20,7 @@ public class CooperativaConsumer {
     private final ObjectMapper objectMapper;
     private final CompromissoService compromissoService;
     private final SolicitacaoLockService solicitacaoLockService;
+    private final br.com.coleta.sistemas.cooperativaparceira.service.ValidarEventoService validarEventoService;
 
     @RabbitListener(
             queues = RabbitMQConfig.FILA_SOLICITAR_ACEITE
@@ -32,6 +33,7 @@ public class CooperativaConsumer {
                         new TypeReference<EventEnvelope<SolicitarAceiteCooperativaEvent>>() {}
                 );
 
+        validarEventoService.validarSolicitacaoAceite(envelope);
         UUID solicitacaoId = envelope.payload().solicitacaoId();
 
         log.info(
@@ -74,6 +76,7 @@ public class CooperativaConsumer {
                                 EventEnvelope<CancelarCompromissoEvent>>() {}
                 );
 
+        validarEventoService.validarCancelamento(envelope);
         UUID solicitacaoId = envelope.payload().solicitacaoId();
 
         log.info(

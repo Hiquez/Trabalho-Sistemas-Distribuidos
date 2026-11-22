@@ -7,6 +7,8 @@ import br.com.coleta.sistemas.cooperativaparceira.Entity.OutboxEvent;
 import br.com.coleta.sistemas.cooperativaparceira.repository.OutBoxEventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.UUID;
@@ -18,6 +20,7 @@ public class OutboxService {
     private final OutBoxEventRepository outboxEventRepository;
     private final ObjectMapper objectMapper;
 
+    @Transactional(propagation = Propagation.MANDATORY)
     public void registrar(
             UUID correlationId,
             String tipoEvento,

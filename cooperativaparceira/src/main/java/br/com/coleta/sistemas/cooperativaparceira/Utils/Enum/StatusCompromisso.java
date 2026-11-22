@@ -4,7 +4,7 @@ public enum StatusCompromisso {
     EM_ANALISE("Em análise"),
     ACEITO("Aceito"),
     RECUSADO("Recusado"),
-    CANCELADO("Cancelado")
+    CANCELADO("Cancelado");
 
     private String descricao;
 

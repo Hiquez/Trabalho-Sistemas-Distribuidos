@@ -2,7 +2,8 @@ package br.com.coleta.sistemas.cooperativaparceira.Utils.Enum;
 
 public enum StatusOutbox {
     PENDENTE("Pendente"),
-    PUBLICADO("Publicado");
+    PUBLICADO("Publicado"),
+    PROCESSANDO("Processando");
 
     private String descricao;
 

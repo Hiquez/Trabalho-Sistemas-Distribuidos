@@ -7,8 +7,6 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
-import java.lang.ScopedValue;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -32,5 +30,5 @@ public interface SolicitacaoLockRepository
         """,
             nativeQuery = true
     )
-    void inserir(UUID solicitacaoId);
+    void inserir(@Param("solicitacaoId") UUID solicitacaoId);
 }

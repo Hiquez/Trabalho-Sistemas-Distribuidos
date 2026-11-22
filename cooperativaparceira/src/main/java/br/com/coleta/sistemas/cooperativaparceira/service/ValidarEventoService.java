@@ -35,8 +35,21 @@ public class ValidarEventoService {
 
         SolicitarAceiteCooperativaEvent evento = envelope.payload();
 
-        if (evento == null || evento.solicitacaoId() == null) {
-            throw new IllegalArgumentException("solicitacaoId obrigatorio");
+        if (evento == null || evento.solicitacaoId() == null || evento.reservaId() == null) {
+            throw new IllegalArgumentException("solicitacaoId e reservaId obrigatorios");
+        }
+    }
+
+    public void validarCancelamento(br.com.coleta.sistemas.cooperativaparceira.mensageria.evento.EventEnvelope<br.com.coleta.sistemas.cooperativaparceira.mensageria.evento.CancelarCompromissoEvent> envelope) {
+        if (envelope == null || envelope.messageId() == null || envelope.correlationId() == null
+                || envelope.occurredAt() == null || envelope.payload() == null
+                || envelope.payload().solicitacaoId() == null
+                || envelope.payload().motivoCancelamento() == null
+                || envelope.payload().motivoCancelamento().isBlank()) {
+            throw new IllegalArgumentException("Envelope de cancelamento invalido");
+        }
+        if (!Integer.valueOf(1).equals(envelope.version()) || !"CancelarCompromisso".equals(envelope.type())) {
+            throw new IllegalArgumentException("Tipo ou versao de cancelamento invalido");
         }
     }
 }

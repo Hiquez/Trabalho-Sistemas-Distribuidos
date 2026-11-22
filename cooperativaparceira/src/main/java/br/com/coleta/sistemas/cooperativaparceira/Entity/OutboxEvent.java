@@ -37,4 +37,10 @@ public class OutboxEvent {
     private Instant criadoEm;
 
     private Instant publicadoEm;
+
+    @Column(name = "RESERVADO_ATE")
+    private Instant reservadoAte;
+
+    @Column(name = "TOKEN_RESERVA")
+    private UUID tokenReserva;
 }

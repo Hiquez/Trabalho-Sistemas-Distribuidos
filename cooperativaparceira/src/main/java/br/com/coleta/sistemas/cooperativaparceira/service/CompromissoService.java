@@ -35,10 +35,6 @@ public class CompromissoService {
         SolicitarAceiteCooperativaEvent evento = envelope.payload();
         UUID solicitacaoId = evento.solicitacaoId();
 
-        // Aqui vai pegar e inserir no banco a solicitação deste compromisso para que futuramente, quando haja alguma ação nele, o sistema faça o devido
-        // bloqueio para que duas cooperativas não possam manipular o mesmo registro simultaneamente.
-        solicitacaoLockService.iniciarLock(solicitacaoId);
-
         // A linha de lock deve existir antes desta transação.
         solicitacaoLockService.bloquear(solicitacaoId);
 
@@ -51,7 +47,12 @@ public class CompromissoService {
                     .orElse(null);
         }
 
-        idempotenciaService.registrarMensagem(envelope.messageId());
+        idempotenciaService.registrarMensagem(
+                envelope.messageId(),
+                envelope.correlationId(),
+                envelope.payload().solicitacaoId(),
+                envelope.type()
+        );
 
         // Cancelamento recebido antes da criação.
         if (cancelamentoAntecipadoRepository
@@ -176,16 +177,7 @@ public class CompromissoService {
     public void cancelarCompromisso(
             EventEnvelope<CancelarCompromissoEvent> envelope
     ) {
-        if (envelope == null
-                || envelope.messageId() == null
-                || envelope.correlationId() == null
-                || envelope.payload() == null
-                || envelope.payload().solicitacaoId() == null) {
-
-            throw new IllegalArgumentException(
-                    "Envelope de cancelamento inválido"
-            );
-        }
+        validarEventoService.validarCancelamento(envelope);
 
         UUID solicitacaoId = envelope.payload().solicitacaoId();
         UUID correlationId = envelope.correlationId();
@@ -198,7 +190,8 @@ public class CompromissoService {
             return;
         }
 
-        idempotenciaService.registrarMensagem(envelope.messageId());
+        idempotenciaService.registrarMensagem(
+                envelope.messageId(), correlationId, solicitacaoId, envelope.type());
 
         Optional<Compromisso> resultado =
                 compromissoRepository.findBySolicitacaoId(solicitacaoId);
@@ -225,7 +218,7 @@ public class CompromissoService {
                         new CompromissoCanceladoEvent(
                                 solicitacaoId,
                                 null,
-                                "CANCELAMENTO_ANTECIPADO",
+                                envelope.payload().motivoCancelamento(),
                                 agora
                         );
 
@@ -270,7 +263,7 @@ public class CompromissoService {
                 new CompromissoCanceladoEvent(
                         compromisso.getSolicitacaoId(),
                         compromisso.getIdCompromisso(),
-                        "CANCELAMENTO_SOLICITADO",
+                        envelope.payload().motivoCancelamento(),
                         agora
                 );
 

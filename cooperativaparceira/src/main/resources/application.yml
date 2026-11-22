@@ -2,23 +2,28 @@ spring:
   application:
     name: cooperativa-parceira-service
 
-    spring:
-      application:
-        name: cooperativa-parceira-service
 
-      rabbitmq:
-        host: ${SPRING_RABBITMQ_HOST:localhost}
-        port: ${SPRING_RABBITMQ_PORT:5672}
-        username: ${SPRING_RABBITMQ_USERNAME:guest}
-        password: ${SPRING_RABBITMQ_PASSWORD:guest}
-        listener:
-          simple:
-            acknowledge-mode: auto
-            default-requeue-rejected: true
-            publisher-confirm-type: correlated
-            publisher-returns: true
-            template:
-              mandatory: true
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+    listener:
+      simple:
+        acknowledge-mode: auto
+        default-requeue-rejected: false
+
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1000ms
+          multiplier: 2.0
+          max-interval: 5000ms
+
 
   datasource:
     url: ${DB_URL:jdbc:oracle:thin:@//localhost:1521/XEPDB1}
@@ -90,7 +95,7 @@ info:
 
 cooperativa:
   simulacao:
-    taxa-recusa: 0.20
-    latencia-min-ms: 100
-    latencia-max-ms: 2000
-    taxa-falha: 0
+    taxa-recusa: ${COOPERATIVA_TAXA_RECUSA:0.20}
+    latencia-min-ms: ${COOPERATIVA_LATENCIA_MIN_MS:100}
+    latencia-max-ms: ${COOPERATIVA_LATENCIA_MAX_MS:2000}
+    taxa-falha: ${COOPERATIVA_TAXA_FALHA:0}
