@@ -11,13 +11,21 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table
+@Table(name = "MENSAGEM_PROCESSADA")
 public class MensagemProcessada {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID idMensagemProcessada;
+
+    @Column(nullable = false, unique = true)
     private UUID messageId;
+
+    private UUID correlationId;
+
+    private UUID solicitacaoId;
+
     private String tipoMensagem;
+
     private Instant processadaEm;
 }
