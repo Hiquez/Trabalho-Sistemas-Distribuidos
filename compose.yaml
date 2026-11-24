@@ -6,6 +6,7 @@ services:
     environment:
       TZ: UTC
       ORACLE_PASSWORD: ${ORACLE_PASSWORD}
+      DB_PASSWORD: ${DB_PASSWORD}
     ports:
       - "1522:1521"
     volumes:
@@ -109,17 +110,17 @@ services:
         condition: service_healthy
 
   coletas:
-    build: ./coletasedestinacao
-    container_name: coleta-destinacao
+    build:
+      context: .
+      dockerfile: coletasedestinacao/Dockerfile
     ports:
       - "8084:8080"
     environment:
       TZ: UTC
       ORA_SDTZ: UTC
-      JAVA_TOOL_OPTIONS: "-Duser.timezone=UTC -Doracle.jdbc.timezoneAsRegion=false"
-      HIBERNATE_DDL_AUTO: ${HIBERNATE_DDL_AUTO:-none}
       SERVER_PORT: 8080
-      DB_URL: jdbc:oracle:thin:@//oracle:1521/FREEPDB1
+      DB_DSN: oracle:1521/FREEPDB1
+      COLETA_CONFIRMADA_ROUTING_KEY: coleta.confirmada
       DB_USERNAME: COLETAS_DESTINACAO
       DB_PASSWORD: ${DB_PASSWORD}
       SPRING_RABBITMQ_HOST: rabbitmq

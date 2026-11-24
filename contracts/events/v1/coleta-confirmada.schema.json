@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "messageId",
+    "correlationId",
+    "type",
+    "version",
+    "occurredAt",
+    "payload"
+  ],
+  "properties": {
+    "messageId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "correlationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "type": {
+      "const": "ColetaConfirmada"
+    },
+    "version": {
+      "const": 1
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "solicitacaoId"
+      ],
+      "properties": {
+        "solicitacaoId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "reservaId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "compromissoId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    }
+  }
+}
