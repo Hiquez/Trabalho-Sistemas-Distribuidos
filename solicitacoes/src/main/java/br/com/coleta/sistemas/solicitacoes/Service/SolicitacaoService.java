@@ -1,3 +1,4 @@
+
 package br.com.coleta.sistemas.solicitacoes.Service;
 
 import br.com.coleta.sistemas.solicitacoes.Dto.SolicitacaoCriadaEventoDTO;
@@ -43,42 +44,54 @@ public class SolicitacaoService {
             );
 
             outboxEventoRepository.save(outbox);
+
+        } catch (JacksonException erro) {
+            throw new IllegalStateException(
+                    "Não foi possível criar o evento da solicitação.", erro
+            );
         }
 
-        catch (JacksonException erro) {
-            throw new IllegalStateException("Não foi possível criar o evento da solicitação.", erro);
-        }
-
-        return new SolicitacaoResponseDTO(
-                salva.getId(),
-                salva.getBairro(),
-                salva.getDataColeta(),
-                salva.getStatus(),
-                salva.getCriadoEm()
-        );
+        return converterParaResponse(salva);
     }
 
     @Transactional(readOnly = true)
     public SolicitacaoResponseDTO buscarPorId(UUID id) {
 
         Solicitacao solicitacao = solicitacaoRespository.findById(id).orElseThrow(
-                () -> new RuntimeException("Solicitação não encontrada"));
+                () -> new RuntimeException("Solicitação não encontrada")
+        );
+
+        return converterParaResponse(solicitacao);
+    }
+
+    private SolicitacaoResponseDTO converterParaResponse(Solicitacao solicitacao) {
+
+        String mensagem = switch (solicitacao.getStatus()) {
+            case PENDENTE -> "Solicitação recebida e aguardando reserva de capacidade.";
+            case AGUARDANDO_RESERVA -> "Solicitação aguardando confirmação de disponibilidade.";
+            case AGUARDANDO_COOPERATIVA -> "Reserva realizada. Aguardando confirmação da cooperativa.";
+            case CONFIRMADA -> "Solicitação confirmada com sucesso.";
+            case CANCELADA -> "Solicitação cancelada: não há vagas disponíveis para o bairro "
+                    + solicitacao.getBairro() + " na data "
+                    + solicitacao.getDataColeta() + ".";
+        };
 
         return new SolicitacaoResponseDTO(
                 solicitacao.getId(),
                 solicitacao.getBairro(),
                 solicitacao.getDataColeta(),
                 solicitacao.getStatus(),
-                solicitacao.getCriadoEm()
+                solicitacao.getCriadoEm(),
+                mensagem
         );
     }
-
 
     @Transactional
     public boolean atualizarStatus(UUID id, StatusSolicitacao novoStatus) {
 
-        Solicitacao solicitacao = solicitacaoRespository.buscarPorIdComBloqueio(id).orElseThrow(() ->
-                                new RuntimeException("Solicitação não encontrada"));
+        Solicitacao solicitacao = solicitacaoRespository
+                .buscarPorIdComBloqueio(id)
+                .orElseThrow(() -> new RuntimeException("Solicitação não encontrada"));
 
         boolean atualizado = solicitacao.atualizarStatus(novoStatus);
 
@@ -88,5 +101,4 @@ public class SolicitacaoService {
 
         return atualizado;
     }
-
 }

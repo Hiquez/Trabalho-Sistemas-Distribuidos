@@ -4,6 +4,6 @@ import java.util.UUID;
 
 public record ResultadoReservaEventoDTO(
         UUID solicitacaoId,
-        boolean reservada
+        Boolean reservada
 ) {
 }

@@ -1,3 +1,4 @@
+
 package br.com.coleta.sistemas.solicitacoes.Consumer;
 
 import br.com.coleta.sistemas.solicitacoes.Config.RabbitMQConfig;
@@ -24,7 +25,11 @@ public class ResultadoReservaConsumer {
     private final SolicitacaoService solicitacaoService;
     private final MensagemProcessadaRepository mensagemRepository;
 
-    public ResultadoReservaConsumer(ObjectMapper objectMapper, SolicitacaoService solicitacaoService, MensagemProcessadaRepository mensagemRepository) {
+    public ResultadoReservaConsumer(
+            ObjectMapper objectMapper,
+            SolicitacaoService solicitacaoService,
+            MensagemProcessadaRepository mensagemRepository
+    ) {
         this.objectMapper = objectMapper;
         this.solicitacaoService = solicitacaoService;
         this.mensagemRepository = mensagemRepository;
@@ -40,33 +45,60 @@ public class ResultadoReservaConsumer {
         );
 
         try {
-            ResultadoReservaEventoDTO evento = objectMapper.readValue(corpo, ResultadoReservaEventoDTO.class);
+            ResultadoReservaEventoDTO evento =
+                    objectMapper.readValue(corpo, ResultadoReservaEventoDTO.class);
+
+            // Valida os campos obrigatórios antes de registrar a mensagem.
+            if (evento == null
+                    || evento.solicitacaoId() == null
+                    || evento.reservada() == null) {
+                throw new IllegalArgumentException(
+                        "Mensagem inválida: solicitacaoId e reservada são obrigatórios."
+                );
+            }
 
             String messageId = mensagem.getMessageProperties().getMessageId();
 
-            if (messageId == null || messageId.isBlank()) {messageId = UUID.nameUUIDFromBytes(corpo.getBytes(StandardCharsets.UTF_8)).toString();
+            // Gera um identificador determinístico caso o produtor não envie um.
+            if (messageId == null || messageId.isBlank()) {
+                messageId = UUID.nameUUIDFromBytes(
+                        corpo.getBytes(StandardCharsets.UTF_8)
+                ).toString();
             }
 
-            boolean mensagemNova = mensagemRepository.registrarSeNovo(messageId, "RESULTADO_RESERVA");
+            // Registra a mensagem somente se ela ainda não foi processada.
+            boolean mensagemNova = mensagemRepository.registrarSeNovo(
+                    messageId,
+                    "RESULTADO_RESERVA"
+            );
 
             if (!mensagemNova) {
+                System.out.println("Mensagem duplicada ignorada: " + messageId);
                 return;
             }
 
-            StatusSolicitacao novoStatus = evento.reservada() ? StatusSolicitacao.AGUARDANDO_COOPERATIVA : StatusSolicitacao.CANCELADA;
+            StatusSolicitacao novoStatus = Boolean.TRUE.equals(evento.reservada())
+                    ? StatusSolicitacao.AGUARDANDO_COOPERATIVA
+                    : StatusSolicitacao.CANCELADA;
 
-            boolean atualizado = solicitacaoService.atualizarStatus(evento.solicitacaoId(), novoStatus);
+            boolean atualizado = solicitacaoService.atualizarStatus(
+                    evento.solicitacaoId(),
+                    novoStatus
+            );
 
             if (atualizado) {
                 System.out.println("Status atualizado para: " + novoStatus);
-            }
-            else {
-                System.out.println("Mensagem ignorada: solicitação já avançou ou foi cancelada.");
+            } else {
+                System.out.println(
+                        "Mensagem ignorada: solicitação já avançou ou foi cancelada."
+                );
             }
 
-        }
-        catch (JacksonException erro) {
-            throw new IllegalArgumentException("Não foi possível converter o resultado da reserva.", erro);
+        } catch (JacksonException erro) {
+            throw new IllegalArgumentException(
+                    "Não foi possível converter o resultado da reserva.",
+                    erro
+            );
         }
     }
 }

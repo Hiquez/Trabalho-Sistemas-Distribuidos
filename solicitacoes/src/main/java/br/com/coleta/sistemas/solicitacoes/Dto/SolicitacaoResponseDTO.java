@@ -11,6 +11,7 @@ public record SolicitacaoResponseDTO(
         String bairro,
         LocalDate dataColeta,
         StatusSolicitacao status,
-        LocalDateTime criadoEm
+        LocalDateTime criadoEm,
+        String mensagem
 ) {
 }
