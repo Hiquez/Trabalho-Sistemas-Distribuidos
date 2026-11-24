@@ -1,10 +1,9 @@
-
 spring:
   application:
     name: agenda-capacidade-service
 
   datasource:
-    url: ${DB_URL:jdbc:oracle:thin:@//localhost:1522/FREEPDB1}
+    url: ${DB_URL:jdbc:oracle:thin:@//localhost:1521/XEPDB1}
     username: ${DB_USERNAME:AGENDA_CAPACIDADE}
     password: ${DB_PASSWORD:1234}
     driver-class-name: oracle.jdbc.OracleDriver
@@ -19,18 +18,17 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: ${HIBERNATE_DDL_AUTO:none}
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
         jdbc:
-          time_zone: UTC
           batch_size: 25
         order_inserts: true
         order_updates: true
 
   jackson:
-    time-zone: UTC
+    time-zone: America/Sao_Paulo
 
 server:
   port: ${SERVER_PORT:8082}
