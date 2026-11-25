@@ -226,6 +226,8 @@ services:
     environment:
       AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
       PERSIST_STATE: "1"
+      S3_PERSIST: "1"
+      S3_DATA_DIR: /data/s3
     volumes:
       - ministack_data:/data
     restart: unless-stopped
