@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/solicitacoes")
@@ -17,7 +18,7 @@ public class SolicitacaoController {
     private final SolicitacaoService solicitacaoService;
 
     @PostMapping
-    public ResponseEntity<SolicitacaoResponseDTO> criar (@RequestBody SolicitacaoRequestDTO dto) {
+    public ResponseEntity<SolicitacaoResponseDTO> criar (@Valid @RequestBody SolicitacaoRequestDTO dto) {
         SolicitacaoResponseDTO resposta = solicitacaoService.criarSolicitacao(dto);
 
         return ResponseEntity.accepted().body(resposta);

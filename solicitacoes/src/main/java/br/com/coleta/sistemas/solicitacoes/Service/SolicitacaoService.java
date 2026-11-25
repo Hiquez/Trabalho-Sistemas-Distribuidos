@@ -16,6 +16,8 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.UUID;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -58,7 +60,7 @@ public class SolicitacaoService {
     public SolicitacaoResponseDTO buscarPorId(UUID id) {
 
         Solicitacao solicitacao = solicitacaoRespository.findById(id).orElseThrow(
-                () -> new RuntimeException("Solicitação não encontrada")
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitação não encontrada")
         );
 
         return converterParaResponse(solicitacao);
@@ -71,9 +73,7 @@ public class SolicitacaoService {
             case AGUARDANDO_RESERVA -> "Solicitação aguardando confirmação de disponibilidade.";
             case AGUARDANDO_COOPERATIVA -> "Reserva realizada. Aguardando confirmação da cooperativa.";
             case CONFIRMADA -> "Solicitação confirmada com sucesso.";
-            case CANCELADA -> "Solicitação cancelada: não há vagas disponíveis para o bairro "
-                    + solicitacao.getBairro() + " na data "
-                    + solicitacao.getDataColeta() + ".";
+            case CANCELADA -> "Solicitação cancelada. Não foi possível concluir a confirmação da coleta.";
         };
 
         return new SolicitacaoResponseDTO(
@@ -91,7 +91,7 @@ public class SolicitacaoService {
 
         Solicitacao solicitacao = solicitacaoRespository
                 .buscarPorIdComBloqueio(id)
-                .orElseThrow(() -> new RuntimeException("Solicitação não encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitação não encontrada"));
 
         boolean atualizado = solicitacao.atualizarStatus(novoStatus);
 
