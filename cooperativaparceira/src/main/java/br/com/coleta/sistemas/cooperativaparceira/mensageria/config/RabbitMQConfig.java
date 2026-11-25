@@ -12,10 +12,10 @@ public class RabbitMQConfig {
     public static final String DLX = "cooperativa.dlx";
 
     public static final String FILA_SOLICITAR_ACEITE =
-            "cooperativa.solicitar-aceite";
+            System.getenv().getOrDefault("MQ_QUEUE_COOPERATIVA_SOLICITAR_ACEITE", "cooperativa.solicitar-aceite");
 
     public static final String FILA_CANCELAR_COMPROMISSO =
-            "cooperativa.cancelar-compromisso";
+            System.getenv().getOrDefault("MQ_QUEUE_COOPERATIVA_CANCELAR_COMPROMISSO", "cooperativa.cancelar-compromisso");
 
     public static final String ROUTING_KEY_SOLICITAR_ACEITE =
             "cooperativa.solicitar-aceite";
@@ -24,10 +24,10 @@ public class RabbitMQConfig {
             "cooperativa.cancelar-compromisso";
 
     public static final String DLQ_SOLICITAR_ACEITE =
-            "cooperativa.solicitar-aceite.dlq";
+            FILA_SOLICITAR_ACEITE + ".dlq";
 
     public static final String DLQ_CANCELAR_COMPROMISSO =
-            "cooperativa.cancelar-compromisso.dlq";
+            FILA_CANCELAR_COMPROMISSO + ".dlq";
 
     @Bean
     public DirectExchange coletaExchange() {

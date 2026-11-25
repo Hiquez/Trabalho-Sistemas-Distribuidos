@@ -46,4 +46,8 @@ public interface OutboxEventoRepository extends JpaRepository<OutboxEvento, UUID
         """, nativeQuery = true)
 
     int liberarEventosTravados(@Param("limite") LocalDateTime limite);
+    @Modifying
+    @Transactional
+    @Query("update OutboxEvento e set e.status=:status, e.publicadoEm=:publicado, e.tentativas=:tentativas, e.ultimoErro=:erro, e.processamentoId=null, e.processandoEm=null where e.id=:id and e.processamentoId=:token and e.status='PROCESSANDO'")
+    int finalizarComToken(@Param("id") UUID id, @Param("token") UUID token, @Param("status") String status, @Param("publicado") LocalDateTime publicado, @Param("tentativas") int tentativas, @Param("erro") String erro);
 }

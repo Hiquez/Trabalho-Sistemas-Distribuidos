@@ -31,7 +31,9 @@
     "payload": {
       "type": "object",
       "required": [
-        "solicitacaoId"
+        "solicitacaoId",
+        "reservaId",
+        "compromissoId"
       ],
       "properties": {
         "solicitacaoId": {

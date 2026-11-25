@@ -78,6 +78,7 @@ public class OutboxEvento {
 
     public void marcarComoPendente() {
         this.status = "PENDENTE";
+        this.publicadoEm = null;
         this.processamentoId = null;
         this.processandoEm = null;
     }

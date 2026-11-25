@@ -62,16 +62,18 @@ public class OutboxEvento {
     public void marcarComoPublicado() {
         this.status = "PUBLICADO";
         this.publicadoEm = LocalDateTime.now();
-        processamentoId = null;
-        processandoEm = null;
+        this.ultimoErro = null;
+        this.processamentoId = null;
+        this.processandoEm = null;
     }
 
     public void registrarTentativa(String erro) {
         this.tentativas++;
         this.ultimoErro = erro;
-        status = "PENDENTE";
-        processamentoId = null;
-        processandoEm = null;
+        this.status = "PENDENTE";
+        this.publicadoEm = null;
+        this.processamentoId = null;
+        this.processandoEm = null;
     }
 
     public boolean estaPendente() {

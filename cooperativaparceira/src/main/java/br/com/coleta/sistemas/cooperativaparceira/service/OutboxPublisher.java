@@ -23,14 +23,15 @@ import java.util.concurrent.TimeUnit;
 public class OutboxPublisher {
 
     private static final String EXCHANGE = "coleta.exchange";
+    private static final int LIMITE_POR_CICLO = 50;
 
     private final OutboxReservaService reservaService;
     private final RabbitTemplate rabbitTemplate;
 
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 500)
     public void publicarPendentes() {
 
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < LIMITE_POR_CICLO; i++) {
 
             var reservado = reservaService.reservarProximo();
 
@@ -162,6 +163,11 @@ public class OutboxPublisher {
                         erroLiberacao
                 );
             }
+
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+
             return false;
         }
     }

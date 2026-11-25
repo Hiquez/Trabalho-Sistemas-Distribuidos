@@ -7,8 +7,8 @@ from . import db
 
 log=logging.getLogger(__name__)
 EXCHANGE='coleta.exchange'
-QUEUE='coletas.coleta-confirmada'
-ROTA=os.getenv('COLETA_CONFIRMADA_ROUTING_KEY','coleta.confirmada')
+QUEUE=os.getenv('MQ_QUEUE_COLETAS_COLETA_CONFIRMADA','coletas.coleta-confirmada')
+ROTA='coleta.confirmada'
 DLX='coletas.dlx'
 DLQ=QUEUE+'.dlq'
 stop=threading.Event()
@@ -92,7 +92,7 @@ def publicar():
                 item=reservar()
                 if not item: stop.wait(1); continue
                 mid,token,rota,payload=item
-                try: ch.basic_publish(EXCHANGE,rota,payload.encode(),pika.BasicProperties(content_type='application/json',delivery_mode=2,message_id=mid),mandatory=True)
+                try: ch.basic_publish(EXCHANGE,rota,payload.encode(),pika.BasicProperties(content_type='application/json',delivery_mode=2,message_id=mid,correlation_id=json.loads(payload)['correlationId']),mandatory=True)
                 except Exception:
                     finalizar(mid,token,False); raise
                 finalizar(mid,token,True)

@@ -15,6 +15,7 @@ services:
     volumes:
       - oracle_data_v2:/opt/oracle/oradata
       - ./database/init:/container-entrypoint-initdb.d:ro
+      - ./database/init:/container-entrypoint-startdb.d:ro
     healthcheck:
       test: ["CMD", "healthcheck.sh"]
       interval: 15s
@@ -49,6 +50,15 @@ services:
     ports:
       - "8081:8080"
     environment:
+      MQ_QUEUE_AGENDA_CONFIRMADA: ${MQ_QUEUE_AGENDA_CONFIRMADA:-agenda.confirmada}
+      MQ_QUEUE_COLETAS_COLETA_CONFIRMADA: ${MQ_QUEUE_COLETAS_COLETA_CONFIRMADA:-coletas.coleta-confirmada}
+      MQ_QUEUE_SOLICITACOES_RESULTADO: ${MQ_QUEUE_SOLICITACOES_RESULTADO:-solicitacoes.resultado}
+      MQ_QUEUE_SOLICITACOES_ACEITE: ${MQ_QUEUE_SOLICITACOES_ACEITE:-solicitacoes.aceite}
+      MQ_QUEUE_SOLICITACOES_RECUSA: ${MQ_QUEUE_SOLICITACOES_RECUSA:-solicitacoes.recusa}
+      MQ_QUEUE_SOLICITACOES_CANCELADO: ${MQ_QUEUE_SOLICITACOES_CANCELADO:-solicitacoes.cancelado}
+      MQ_QUEUE_SOLICITACOES_EXECUTADA: ${MQ_QUEUE_SOLICITACOES_EXECUTADA:-solicitacoes.executada}
+      MQ_QUEUE_SOLICITACOES_TRIADA: ${MQ_QUEUE_SOLICITACOES_TRIADA:-solicitacoes.triada}
+      MQ_QUEUE_SOLICITACOES_DESTINADA: ${MQ_QUEUE_SOLICITACOES_DESTINADA:-solicitacoes.destinada}
       TZ: UTC
       ORA_SDTZ: "+00:00"
       JAVA_TOOL_OPTIONS: "-Duser.timezone=UTC -Doracle.jdbc.timezoneAsRegion=false"
@@ -90,6 +100,9 @@ services:
     ports:
       - "8082:8080"
     environment:
+      MQ_QUEUE_AGENDA_CRIADA: ${MQ_QUEUE_AGENDA_CRIADA:-agenda.criada}
+      MQ_QUEUE_AGENDA_LIBERAR: ${MQ_QUEUE_AGENDA_LIBERAR:-agenda.liberar}
+      MQ_QUEUE_AGENDA_CONFIRMADA: ${MQ_QUEUE_AGENDA_CONFIRMADA:-agenda.confirmada}
       TZ: UTC
       ORA_SDTZ: "+00:00"
       JAVA_TOOL_OPTIONS: "-Duser.timezone=UTC -Doracle.jdbc.timezoneAsRegion=false"
@@ -128,6 +141,8 @@ services:
     ports:
       - "8080"
     environment:
+      MQ_QUEUE_COOPERATIVA_SOLICITAR_ACEITE: ${MQ_QUEUE_COOPERATIVA_SOLICITAR_ACEITE:-cooperativa.solicitar-aceite}
+      MQ_QUEUE_COOPERATIVA_CANCELAR_COMPROMISSO: ${MQ_QUEUE_COOPERATIVA_CANCELAR_COMPROMISSO:-cooperativa.cancelar-compromisso}
       TZ: UTC
       ORA_SDTZ: "+00:00"
       JAVA_TOOL_OPTIONS: "-Duser.timezone=UTC -Doracle.jdbc.timezoneAsRegion=false"
@@ -171,12 +186,12 @@ services:
     ports:
       - "8084:8080"
     environment:
+      MQ_QUEUE_COLETAS_COLETA_CONFIRMADA: ${MQ_QUEUE_COLETAS_COLETA_CONFIRMADA:-coletas.coleta-confirmada}
       TZ: UTC
       ORA_SDTZ: "+00:00"
       SERVER_PORT: 8080
       DB_DSN: oracle:1521/FREEPDB1
 
-      COLETA_CONFIRMADA_ROUTING_KEY: coleta.confirmada
 
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672

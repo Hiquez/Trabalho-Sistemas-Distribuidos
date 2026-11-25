@@ -23,9 +23,10 @@ public class CooperativaConsumer {
     private final br.com.coleta.sistemas.cooperativaparceira.service.ValidarEventoService validarEventoService;
 
     @RabbitListener(
-            queues = RabbitMQConfig.FILA_SOLICITAR_ACEITE
+            queues = "${MQ_QUEUE_COOPERATIVA_SOLICITAR_ACEITE:cooperativa.solicitar-aceite}"
     )
     public void consumirSolicitarAceite(String mensagem) throws Exception {
+        br.com.coleta.sistemas.cooperativaparceira.ContratoEvento.validar(objectMapper,mensagem,"SolicitarAceiteCooperativa");
 
         EventEnvelope<SolicitarAceiteCooperativaEvent> envelope =
                 objectMapper.readValue(
@@ -46,28 +47,15 @@ public class CooperativaConsumer {
 
         UUID compromissoId = compromissoService.criarCompromisso(envelope);
 
-        if (compromissoId == null) {
-            log.info(
-                    "Solicitação {} ignorada por cancelamento antecipado.",
-                    solicitacaoId
-            );
-            return;
-        }
-
-        log.info(
-                "Compromisso {} criado ou recuperado para solicitação {}.",
-                compromissoId,
-                solicitacaoId
-        );
-
         // O processamento da simulação será acionado
         // por um mecanismo separado e recuperável.
     }
 
     @RabbitListener(
-            queues = RabbitMQConfig.FILA_CANCELAR_COMPROMISSO
+            queues = "${MQ_QUEUE_COOPERATIVA_CANCELAR_COMPROMISSO:cooperativa.cancelar-compromisso}"
     )
     public void consumirCancelarCompromisso(String mensagem) throws Exception {
+        br.com.coleta.sistemas.cooperativaparceira.ContratoEvento.validar(objectMapper,mensagem,"CancelarCompromisso");
 
         EventEnvelope<CancelarCompromissoEvent> envelope =
                 objectMapper.readValue(

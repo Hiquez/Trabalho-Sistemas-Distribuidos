@@ -15,6 +15,11 @@ public class SolicitacaoLockService {
 
 
     public void iniciarLock(UUID solicitacaoId) {
+
+        if (repository.existsById(solicitacaoId)) {
+            return;
+        }
+
         try {
             inicializacao.inicializar(solicitacaoId);
         } catch (DataIntegrityViolationException ex) {

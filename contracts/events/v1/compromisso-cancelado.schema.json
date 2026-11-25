@@ -42,7 +42,10 @@
           "format": "uuid"
         },
         "compromissoId": {
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "uuid"
         },
         "motivoCancelamento": {

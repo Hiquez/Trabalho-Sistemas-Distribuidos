@@ -46,7 +46,23 @@
           "type": "string",
           "format": "uuid"
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "reservada": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "reservaId"
+            ]
+          }
+        }
+      ]
     }
   }
 }

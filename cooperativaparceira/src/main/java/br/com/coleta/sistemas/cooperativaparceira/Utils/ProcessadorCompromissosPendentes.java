@@ -25,7 +25,7 @@ public class ProcessadorCompromissosPendentes {
     private final SimulacaoCooperativaService simulacaoCooperativaService;
     private final MensagemProcessadaRepository mensagemProcessadaRepository;
 
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 500)
     public void processarPendentes() {
 
         List<Compromisso> pendentes =

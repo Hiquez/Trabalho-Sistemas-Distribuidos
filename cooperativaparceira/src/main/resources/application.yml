@@ -23,7 +23,7 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:oracle:thin:@//localhost:1522/FREEPDB1}
     username: ${DB_USERNAME:COOPERATIVA}
-    password: ${DB_PASSWORD:1234}
+    password: ${DB_PASSWORD}
     driver-class-name: oracle.jdbc.OracleDriver
     hikari:
       pool-name: cooperativa-parceira-service-pool
