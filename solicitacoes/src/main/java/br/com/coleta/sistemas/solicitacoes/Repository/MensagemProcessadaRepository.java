@@ -16,10 +16,10 @@ public class MensagemProcessadaRepository {
     public boolean registrarSeNovo(String messageId, String tipo) {
 
         int inseridos = jdbcTemplate.update("""
-            INSERT INTO mensagens_processadas
+            INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX(mensagens_processadas (message_id)) */ INTO mensagens_processadas
                 (message_id, tipo_mensagem, processado_em)
             VALUES (?, ?, CURRENT_TIMESTAMP)
-            ON CONFLICT (message_id) DO NOTHING
+
             """, messageId, tipo);
 
         return inseridos == 1;

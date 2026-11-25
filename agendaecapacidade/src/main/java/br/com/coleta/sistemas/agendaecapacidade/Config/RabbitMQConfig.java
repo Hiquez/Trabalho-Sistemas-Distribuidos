@@ -1,48 +1,12 @@
-
 package br.com.coleta.sistemas.agendaecapacidade.Config;
-
-import org.springframework.amqp.core.AcknowledgeMode;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.QueueBuilder;
-import org.springframework.amqp.rabbit.annotation.EnableRabbit;
-import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
-@Configuration
-@EnableRabbit
-public class RabbitMQConfig {
-
-    public static final String FILA_SOLICITACAO_CRIADA = "solicitacao.criada";
-    public static final String FILA_RESULTADO_RESERVA = "reserva.resultado";
-
-    @Bean
-    public Queue filaSolicitacaoCriada() {
-        return QueueBuilder.durable(FILA_SOLICITACAO_CRIADA)
-                .deadLetterExchange("")
-                .deadLetterRoutingKey("solicitacao.criada.dlq")
-                .build();
-    }
-
-    @Bean
-    public Queue filaSolicitacaoCriadaDlq() {
-        return new Queue("solicitacao.criada.dlq", true);
-    }
-
-    @Bean
-    public Queue filaResultadoReserva() {
-        return new Queue(FILA_RESULTADO_RESERVA, true);
-    }
-
-    @Bean
-    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory) {
-
-        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
-
-        factory.setConnectionFactory(connectionFactory);
-        factory.setAcknowledgeMode(AcknowledgeMode.AUTO);
-
-        return factory;
-    }
-}
+import org.springframework.amqp.core.*; import org.springframework.context.annotation.*; import java.util.*;
+@Configuration public class RabbitMQConfig {
+ public static final String EXCHANGE_SOLICITACOES="coleta.exchange";
+ public static final String ROUTING_KEY_SOLICITACAO_CRIADA="solicitacao.criada";
+ public static final String FILA_SOLICITACAO_CRIADA="agenda.criada";
+ public static final String FILA_RESULTADO_RESERVA="solicitacoes.resultado";
+ @Bean public Declarables topologia(){var x=new DirectExchange("coleta.exchange",true,false); List<Declarable> all=new ArrayList<>(); all.add(x);
+{var q=QueueBuilder.durable("agenda.criada").deadLetterExchange("").deadLetterRoutingKey("agenda.criada.dlq").build(); all.add(q); all.add(QueueBuilder.durable("agenda.criada.dlq").build()); all.add(BindingBuilder.bind(q).to(x).with("solicitacao.criada"));}
+{var q=QueueBuilder.durable("agenda.liberar").deadLetterExchange("").deadLetterRoutingKey("agenda.liberar.dlq").build(); all.add(q); all.add(QueueBuilder.durable("agenda.liberar.dlq").build()); all.add(BindingBuilder.bind(q).to(x).with("agenda.liberar-reserva"));}
+{var q=QueueBuilder.durable("agenda.confirmada").deadLetterExchange("").deadLetterRoutingKey("agenda.confirmada.dlq").build(); all.add(q); all.add(QueueBuilder.durable("agenda.confirmada.dlq").build()); all.add(BindingBuilder.bind(q).to(x).with("coleta.confirmada"));}
+return new Declarables(all);}}

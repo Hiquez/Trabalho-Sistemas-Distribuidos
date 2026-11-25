@@ -23,13 +23,12 @@ public interface OutboxEventoRepository extends JpaRepository<OutboxEvento, UUID
         SET status = 'PROCESSANDO',
             processamento_id = :token,
             processando_em = CURRENT_TIMESTAMP
-        WHERE id IN (
+        WHERE status = 'PENDENTE' AND id IN (
             SELECT id
             FROM outbox_eventos
             WHERE status = 'PENDENTE'
             ORDER BY criado_em
-            LIMIT :limite
-            FOR UPDATE SKIP LOCKED
+            FETCH FIRST :limite ROWS ONLY
         )
         """, nativeQuery = true)
 

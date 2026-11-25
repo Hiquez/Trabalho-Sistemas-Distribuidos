@@ -1,5 +1,8 @@
 FROM python:3.12-slim
 WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends awscli jq && rm -rf /var/lib/apt/lists/*
+COPY infrastructure/ministack/secret-entrypoint.sh /secret-entrypoint.sh
+ENTRYPOINT ["sh", "/secret-entrypoint.sh"]
 COPY coletasedestinacao/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY coletasedestinacao/ /app/

@@ -1,9 +1,8 @@
 spring:
   application:
     name: solicitacoes-service
-
   datasource:
-    url: ${DB_URL:jdbc:oracle:thin:@//localhost:1521/XEPDB1}
+    url: ${DB_URL:jdbc:oracle:thin:@//localhost:1522/FREEPDB1}
     username: ${DB_USERNAME:SOLICITACOES}
     password: ${DB_PASSWORD:1234}
     driver-class-name: oracle.jdbc.OracleDriver
@@ -14,11 +13,10 @@ spring:
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
-
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${HIBERNATE_DDL_AUTO:none}
     properties:
       hibernate:
         format_sql: true
@@ -26,23 +24,41 @@ spring:
           batch_size: 25
         order_inserts: true
         order_updates: true
-
   jackson:
     time-zone: America/Sao_Paulo
-
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+    listener:
+      simple:
+        acknowledge-mode: auto
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1000ms
+          multiplier: 2.0
+          max-interval: 5000ms
 server:
   port: ${SERVER_PORT:8081}
   error:
     include-message: always
     include-binding-errors: always
     include-stacktrace: never
-
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
-
 management:
   endpoints:
     web:
@@ -54,7 +70,6 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
-
 logging:
   level:
     root: INFO
@@ -63,7 +78,6 @@ logging:
     com.zaxxer.hikari: WARN
   file:
     name: logs/${spring.application.name}.log
-
 info:
   app:
     name: ${spring.application.name}

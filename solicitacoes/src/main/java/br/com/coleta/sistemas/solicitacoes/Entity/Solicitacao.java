@@ -29,6 +29,11 @@ public class Solicitacao {
     @Column(nullable = false)
     private LocalDateTime criadoEm;
 
+    private UUID reservaId;
+    private java.time.Instant prazo;
+    public void reservar(UUID id, java.time.Instant limite){reservaId=id; prazo=limite; status=StatusSolicitacao.AGUARDANDO_COOPERATIVA;}
+    public void confirmar(){status=StatusSolicitacao.CONFIRMADA;}
+    public void cancelar(){status=StatusSolicitacao.CANCELADA;}
     public Solicitacao() {
 
     }

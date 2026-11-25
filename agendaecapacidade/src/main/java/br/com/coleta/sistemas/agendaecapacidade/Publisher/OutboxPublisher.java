@@ -30,20 +30,20 @@ public class OutboxPublisher {
 
         UUID token = UUID.randomUUID();
 
-        outboxEventoRepository.reservarPendentes(token, 50);
+        outboxEventoRepository.reservarPendentes(token, 1);
 
         var eventos = outboxEventoRepository.findByProcessamentoId(token);
         for (OutboxEvento evento : eventos) {
 
             try {
-                CorrelationData correlacao = new CorrelationData(evento.getId().toString());
+                CorrelationData correlacao = new CorrelationData(new tools.jackson.databind.ObjectMapper().readTree(evento.getPayload()).get("messageId").asText());
                 MessagePostProcessor processador = mensagem -> {
-                    mensagem.getMessageProperties().setMessageId(evento.getId().toString());
+                    mensagem.getMessageProperties().setMessageId(new tools.jackson.databind.ObjectMapper().readTree(evento.getPayload()).get("messageId").asText());
                     return mensagem;
                 };
 
                 rabbitTemplate.convertAndSend(
-                        "", RabbitMQConfig.FILA_RESULTADO_RESERVA,
+                        "coleta.exchange", evento.getTipoEvento(),
                         evento.getPayload(), processador, correlacao);
 
                 CorrelationData.Confirm confirmacao = correlacao.getFuture().get(10, TimeUnit.SECONDS);

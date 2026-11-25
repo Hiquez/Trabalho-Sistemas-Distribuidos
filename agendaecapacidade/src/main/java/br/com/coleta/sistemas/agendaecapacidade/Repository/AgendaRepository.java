@@ -8,6 +8,7 @@ import java.util.UUID;
 
 public interface AgendaRepository extends JpaRepository<Agenda, UUID> {
 
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
     Optional<Agenda> findBySolicitacaoId(UUID solicitacaoId);
     Optional<Agenda> findByBairroAndDataColeta(String bairro, java.time.LocalDate dataColeta);
 }

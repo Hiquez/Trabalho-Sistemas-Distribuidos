@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "messageId",
+    "correlationId",
+    "type",
+    "version",
+    "occurredAt",
+    "payload"
+  ],
+  "properties": {
+    "messageId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "correlationId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "type": {
+      "const": "SolicitacaoCriada"
+    },
+    "version": {
+      "const": 1
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "solicitacaoId",
+        "bairro",
+        "dataColeta"
+      ],
+      "properties": {
+        "solicitacaoId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "bairro": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dataColeta": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    }
+  }
+}

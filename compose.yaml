@@ -1,16 +1,19 @@
-
 services:
   oracle:
     image: gvenzl/oracle-free:23-slim
     container_name: coleta-oracle
     environment:
       TZ: UTC
+      ORA_SDTZ: "+00:00"
       ORACLE_PASSWORD: ${ORACLE_PASSWORD}
-      DB_PASSWORD: ${DB_PASSWORD}
+      SOLICITACOES_PASSWORD: ${SOLICITACOES_PASSWORD:?configure a senha}
+      AGENDA_CAPACIDADE_PASSWORD: ${AGENDA_CAPACIDADE_PASSWORD:?configure a senha}
+      COOPERATIVA_PASSWORD: ${COOPERATIVA_PASSWORD:?configure a senha}
+      COLETAS_DESTINACAO_PASSWORD: ${COLETAS_DESTINACAO_PASSWORD:?configure a senha}
     ports:
       - "1522:1521"
     volumes:
-      - oracle_data:/opt/oracle/oradata
+      - oracle_data_v2:/opt/oracle/oradata
       - ./database/init:/container-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "healthcheck.sh"]
@@ -39,75 +42,127 @@ services:
     restart: unless-stopped
 
   solicitacoes:
-    build: ./solicitacoes
+    build:
+      context: .
+      dockerfile: solicitacoes/Dockerfile
     container_name: coleta-solicitacoes
     ports:
       - "8081:8080"
     environment:
       TZ: UTC
-      ORA_SDTZ: UTC
+      ORA_SDTZ: "+00:00"
       JAVA_TOOL_OPTIONS: "-Duser.timezone=UTC -Doracle.jdbc.timezoneAsRegion=false"
       HIBERNATE_DDL_AUTO: ${HIBERNATE_DDL_AUTO:-none}
       SERVER_PORT: 8080
       DB_URL: jdbc:oracle:thin:@//oracle:1521/FREEPDB1
-      DB_USERNAME: SOLICITACOES
-      DB_PASSWORD: ${DB_PASSWORD}
+
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER}
       SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+
+      DB_SECRET_NAME: coleta/solicitacoes
+      SECRETS_ENDPOINT: http://ministack:4566
+
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-test}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-test}
+      AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
+      AWS_EC2_METADATA_DISABLED: "true"
+
+      SPRING_RABBITMQ_PUBLISHER_CONFIRM_TYPE: correlated
+      SPRING_RABBITMQ_PUBLISHER_RETURNS: "true"
+      SPRING_RABBITMQ_TEMPLATE_MANDATORY: "true"
+
+      SAGA_TIMEOUT_SECONDS: ${SAGA_TIMEOUT_SECONDS:-60}
     depends_on:
       oracle:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      ministack-init:
+        condition: service_completed_successfully
 
   agenda:
-    build: ./agendaecapacidade
+    build:
+      context: .
+      dockerfile: agendaecapacidade/Dockerfile
     container_name: coleta-agenda
     ports:
       - "8082:8080"
     environment:
       TZ: UTC
-      ORA_SDTZ: UTC
+      ORA_SDTZ: "+00:00"
       JAVA_TOOL_OPTIONS: "-Duser.timezone=UTC -Doracle.jdbc.timezoneAsRegion=false"
       HIBERNATE_DDL_AUTO: ${HIBERNATE_DDL_AUTO:-none}
       SERVER_PORT: 8080
       DB_URL: jdbc:oracle:thin:@//oracle:1521/FREEPDB1
-      DB_USERNAME: AGENDA_CAPACIDADE
-      DB_PASSWORD: ${DB_PASSWORD}
+
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER}
       SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+
+      DB_SECRET_NAME: coleta/agenda
+      SECRETS_ENDPOINT: http://ministack:4566
+
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-test}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-test}
+      AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
+      AWS_EC2_METADATA_DISABLED: "true"
+
+      SPRING_RABBITMQ_PUBLISHER_CONFIRM_TYPE: correlated
+      SPRING_RABBITMQ_PUBLISHER_RETURNS: "true"
+      SPRING_RABBITMQ_TEMPLATE_MANDATORY: "true"
     depends_on:
       oracle:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      ministack-init:
+        condition: service_completed_successfully
 
   cooperativa:
-    build: ./cooperativaparceira
+    build:
+      context: .
+      dockerfile: cooperativaparceira/Dockerfile
     ports:
       - "8080"
     environment:
       TZ: UTC
-      ORA_SDTZ: UTC
+      ORA_SDTZ: "+00:00"
       JAVA_TOOL_OPTIONS: "-Duser.timezone=UTC -Doracle.jdbc.timezoneAsRegion=false"
       HIBERNATE_DDL_AUTO: ${HIBERNATE_DDL_AUTO:-none}
       SERVER_PORT: 8080
       DB_URL: jdbc:oracle:thin:@//oracle:1521/FREEPDB1
-      DB_USERNAME: COOPERATIVA
-      DB_PASSWORD: ${DB_PASSWORD}
+
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER}
       SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+
+      DB_SECRET_NAME: coleta/cooperativa
+      SECRETS_ENDPOINT: http://ministack:4566
+
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-test}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-test}
+      AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
+      AWS_EC2_METADATA_DISABLED: "true"
+
+      SPRING_RABBITMQ_PUBLISHER_CONFIRM_TYPE: correlated
+      SPRING_RABBITMQ_PUBLISHER_RETURNS: "true"
+      SPRING_RABBITMQ_TEMPLATE_MANDATORY: "true"
+
+      COOPERATIVA_TAXA_RECUSA: ${COOPERATIVA_TAXA_RECUSA:-0}
+      COOPERATIVA_TAXA_FALHA: ${COOPERATIVA_TAXA_FALHA:-0}
+      COOPERATIVA_LATENCIA_MIN_MS: ${COOPERATIVA_LATENCIA_MIN_MS:-100}
+      COOPERATIVA_LATENCIA_MAX_MS: ${COOPERATIVA_LATENCIA_MAX_MS:-2000}
     depends_on:
       oracle:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      ministack-init:
+        condition: service_completed_successfully
 
   coletas:
     build:
@@ -117,22 +172,28 @@ services:
       - "8084:8080"
     environment:
       TZ: UTC
-      ORA_SDTZ: UTC
+      ORA_SDTZ: "+00:00"
       SERVER_PORT: 8080
       DB_DSN: oracle:1521/FREEPDB1
+
       COLETA_CONFIRMADA_ROUTING_KEY: coleta.confirmada
-      DB_USERNAME: COLETAS_DESTINACAO
-      DB_PASSWORD: ${DB_PASSWORD}
+
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER}
       SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+
       AWS_REGION: ${AWS_REGION:-us-east-1}
-      S3_BUCKET: ${S3_BUCKET:-coleta-comprovantes}
-      S3_ENDPOINT: ${S3_ENDPOINT:-http://ministack:4566}
+      AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
       AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-test}
       AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-test}
       AWS_EC2_METADATA_DISABLED: "true"
+
+      S3_BUCKET: ${S3_BUCKET:-coleta-comprovantes}
+      S3_ENDPOINT: http://ministack:4566
+
+      DB_SECRET_NAME: coleta/coletas
+      SECRETS_ENDPOINT: http://ministack:4566
     depends_on:
       oracle:
         condition: service_healthy
@@ -153,18 +214,25 @@ services:
       - ministack_data:/data
     restart: unless-stopped
 
-  # Inicializa os recursos AWS emulados antes de iniciar o servico de coletas.
   ministack-init:
     image: public.ecr.aws/aws-cli/aws-cli:latest
     container_name: coleta-ministack-init
-    entrypoint: ["/bin/sh", "/scripts/01-create-bucket.sh"]
+    entrypoint:
+      - /bin/sh
+      - /scripts/01-create-bucket.sh
     environment:
       AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-test}
       AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-test}
       AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-1}
       AWS_EC2_METADATA_DISABLED: "true"
+
       S3_ENDPOINT: http://ministack:4566
       S3_BUCKET: ${S3_BUCKET:-coleta-comprovantes}
+
+      SOLICITACOES_PASSWORD: ${SOLICITACOES_PASSWORD:?configure a senha}
+      AGENDA_CAPACIDADE_PASSWORD: ${AGENDA_CAPACIDADE_PASSWORD:?configure a senha}
+      COOPERATIVA_PASSWORD: ${COOPERATIVA_PASSWORD:?configure a senha}
+      COLETAS_DESTINACAO_PASSWORD: ${COLETAS_DESTINACAO_PASSWORD:?configure a senha}
     volumes:
       - ./infrastructure/ministack/init:/scripts:ro
     depends_on:
@@ -174,5 +242,6 @@ services:
 
 volumes:
   oracle_data:
+  oracle_data_v2:
   rabbitmq_data:
   ministack_data:

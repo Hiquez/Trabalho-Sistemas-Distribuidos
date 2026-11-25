@@ -27,21 +27,21 @@ public class OutboxPublisher {
 
         UUID token = UUID.randomUUID();
 
-        outboxEventoRepository.reservarPendentes(token, 50);
+        outboxEventoRepository.reservarPendentes(token, 1);
 
         var eventos = outboxEventoRepository.findByProcessamentoId(token);
 
         for (OutboxEvento evento : eventos) {
             try {
-                CorrelationData correlacao = new CorrelationData(evento.getId().toString());
+                CorrelationData correlacao = new CorrelationData(new tools.jackson.databind.ObjectMapper().readTree(evento.getPayload()).get("messageId").asText());
 
                 rabbitTemplate.convertAndSend(
                         RabbitMQConfig.EXCHANGE_SOLICITACOES,
-                        RabbitMQConfig.ROUTING_KEY_SOLICITACAO_CRIADA,
+                        evento.getTipoEvento(),
                         evento.getPayload(),
                         mensagem -> {
                             mensagem.getMessageProperties().setMessageId(
-                                    evento.getId().toString());
+                                    new tools.jackson.databind.ObjectMapper().readTree(evento.getPayload()).get("messageId").asText());
                             return mensagem;
                         },
                         correlacao

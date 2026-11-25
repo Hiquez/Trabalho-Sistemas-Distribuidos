@@ -1,104 +1,22 @@
-
 package br.com.coleta.sistemas.solicitacoes.Consumer;
-
-import br.com.coleta.sistemas.solicitacoes.Config.RabbitMQConfig;
-import br.com.coleta.sistemas.solicitacoes.Dto.ResultadoReservaEventoDTO;
-import br.com.coleta.sistemas.solicitacoes.Entity.StatusSolicitacao;
-import br.com.coleta.sistemas.solicitacoes.Repository.MensagemProcessadaRepository;
-import br.com.coleta.sistemas.solicitacoes.Service.SolicitacaoService;
-
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
-
-import java.nio.charset.StandardCharsets;
-import java.util.UUID;
-
-@Component
-public class ResultadoReservaConsumer {
-
-    private final ObjectMapper objectMapper;
-    private final SolicitacaoService solicitacaoService;
-    private final MensagemProcessadaRepository mensagemRepository;
-
-    public ResultadoReservaConsumer(
-            ObjectMapper objectMapper,
-            SolicitacaoService solicitacaoService,
-            MensagemProcessadaRepository mensagemRepository
-    ) {
-        this.objectMapper = objectMapper;
-        this.solicitacaoService = solicitacaoService;
-        this.mensagemRepository = mensagemRepository;
-    }
-
-    @RabbitListener(queues = RabbitMQConfig.FILA_RESULTADO_RESERVA)
-    @Transactional
-    public void receber(Message mensagem) {
-
-        String corpo = new String(
-                mensagem.getBody(),
-                StandardCharsets.UTF_8
-        );
-
-        try {
-            ResultadoReservaEventoDTO evento =
-                    objectMapper.readValue(corpo, ResultadoReservaEventoDTO.class);
-
-            // Valida os campos obrigatórios antes de registrar a mensagem.
-            if (evento == null
-                    || evento.solicitacaoId() == null
-                    || evento.reservada() == null) {
-                throw new IllegalArgumentException(
-                        "Mensagem inválida: solicitacaoId e reservada são obrigatórios."
-                );
-            }
-
-            String messageId = mensagem.getMessageProperties().getMessageId();
-
-            // Gera um identificador determinístico caso o produtor não envie um.
-            if (messageId == null || messageId.isBlank()) {
-                messageId = UUID.nameUUIDFromBytes(
-                        corpo.getBytes(StandardCharsets.UTF_8)
-                ).toString();
-            }
-
-            // Registra a mensagem somente se ela ainda não foi processada.
-            boolean mensagemNova = mensagemRepository.registrarSeNovo(
-                    messageId,
-                    "RESULTADO_RESERVA"
-            );
-
-            if (!mensagemNova) {
-                System.out.println("Mensagem duplicada ignorada: " + messageId);
-                return;
-            }
-
-            StatusSolicitacao novoStatus = Boolean.TRUE.equals(evento.reservada())
-                    ? StatusSolicitacao.AGUARDANDO_COOPERATIVA
-                    : StatusSolicitacao.CANCELADA;
-
-            boolean atualizado = solicitacaoService.atualizarStatus(
-                    evento.solicitacaoId(),
-                    novoStatus
-            );
-
-            if (atualizado) {
-                System.out.println("Status atualizado para: " + novoStatus);
-            } else {
-                System.out.println(
-                        "Mensagem ignorada: solicitação já avançou ou foi cancelada."
-                );
-            }
-
-        } catch (JacksonException erro) {
-            throw new IllegalArgumentException(
-                    "Não foi possível converter o resultado da reserva.",
-                    erro
-            );
-        }
-    }
+import br.com.coleta.sistemas.solicitacoes.Dto.Envelope;
+import br.com.coleta.sistemas.solicitacoes.Entity.*;
+import br.com.coleta.sistemas.solicitacoes.Repository.*;
+import org.springframework.amqp.rabbit.annotation.RabbitListener; import org.springframework.stereotype.Component; import org.springframework.transaction.annotation.Transactional; import org.springframework.scheduling.annotation.Scheduled; import org.springframework.beans.factory.annotation.Value;
+import tools.jackson.databind.ObjectMapper; import lombok.RequiredArgsConstructor; import java.util.*; import java.time.*;
+@Component @RequiredArgsConstructor public class ResultadoReservaConsumer {
+ private final ObjectMapper mapper; private final SolicitacaoRespository repo; private final MensagemProcessadaRepository inbox; private final OutboxEventoRepository outbox;
+ @Value("${SAGA_TIMEOUT_SECONDS:15}") private long timeout;
+ private void emitir(Solicitacao s,String rota,String tipo,Map<String,Object> p){outbox.save(new OutboxEvento(s.getId(),rota,mapper.writeValueAsString(Envelope.criar(s.getId(),tipo,p))));}
+ private void compensar(Solicitacao s){s.cancelar(); emitir(s,"agenda.liberar-reserva","LiberarReserva",Map.of("solicitacaoId",s.getId())); emitir(s,"cooperativa.cancelar-compromisso","CancelarCompromisso",Map.of("solicitacaoId",s.getId(),"motivoCancelamento","Saga cancelada"));}
+ @RabbitListener(queues="solicitacoes.resultado") @Transactional public void receber(String body){var e=mapper.readValue(body,Envelope.class);e.validar("ResultadoReserva");var s=repo.buscarPorIdComBloqueio(e.id("solicitacaoId")).orElseThrow(); if(!(e.payload().get("reservada") instanceof Boolean))throw new IllegalArgumentException("reservada"); if(!inbox.registrarSeNovo(e.messageId().toString(),e.type()))return;
+ if(s.getStatus()==StatusSolicitacao.CANCELADA){if(Boolean.TRUE.equals(e.payload().get("reservada")))compensar(s);return;} if(s.getStatus()!=StatusSolicitacao.PENDENTE&&s.getStatus()!=StatusSolicitacao.AGUARDANDO_RESERVA)return;
+ if(!Boolean.TRUE.equals(e.payload().get("reservada"))){s.cancelar();return;} s.reservar(e.id("reservaId"),Instant.now().plusSeconds(timeout)); emitir(s,"cooperativa.solicitar-aceite","SolicitarAceiteCooperativa",Map.of("solicitacaoId",s.getId(),"reservaId",s.getReservaId(),"categoriaResiduo","ELETRONICO","quantidadeEstimada",1,"dataAgendada",s.getDataColeta().atStartOfDay(ZoneOffset.UTC).toInstant()));}
+ @RabbitListener(queues="solicitacoes.aceite") @Transactional public void aceite(String body){var e=mapper.readValue(body,Envelope.class);e.validar("CooperativaAceitou");var s=repo.buscarPorIdComBloqueio(e.id("solicitacaoId")).orElseThrow();if(!inbox.registrarSeNovo(e.messageId().toString(),e.type()))return;if(s.getStatus()==StatusSolicitacao.CONFIRMADA)return;if(s.getStatus()!=StatusSolicitacao.AGUARDANDO_COOPERATIVA||!Instant.now().isBefore(s.getPrazo())){compensar(s);return;}if(!s.getReservaId().equals(e.id("reservaId")))throw new IllegalArgumentException("reserva divergente");s.confirmar();emitir(s,"coleta.confirmada","ColetaConfirmada",Map.of("solicitacaoId",s.getId(),"reservaId",s.getReservaId(),"compromissoId",e.id("compromissoId")));}
+ @RabbitListener(queues="solicitacoes.recusa") @Transactional public void recusa(String body){var e=mapper.readValue(body,Envelope.class);e.validar("CooperativaRecusou");var s=repo.buscarPorIdComBloqueio(e.id("solicitacaoId")).orElseThrow();if(inbox.registrarSeNovo(e.messageId().toString(),e.type())&&s.getStatus()==StatusSolicitacao.AGUARDANDO_COOPERATIVA)compensar(s);}
+ @Scheduled(fixedDelay=1000) @Transactional public void expirar(){for(var id:repo.expiradas(Instant.now())){var s=repo.buscarPorIdComBloqueio(id).orElseThrow();if(s.getStatus()==StatusSolicitacao.AGUARDANDO_COOPERATIVA&&!Instant.now().isBefore(s.getPrazo()))compensar(s);}}
+ @RabbitListener(queues="solicitacoes.cancelado") @Transactional public void cancelado(String body){var e=mapper.readValue(body,Envelope.class);e.validar("CompromissoCancelado");inbox.registrarSeNovo(e.messageId().toString(),e.type());}
+ @RabbitListener(queues="solicitacoes.executada") @Transactional public void executada(String body){var e=mapper.readValue(body,Envelope.class);e.validar("ColetaExecutada");inbox.registrarSeNovo(e.messageId().toString(),e.type());}
+ @RabbitListener(queues="solicitacoes.triada") @Transactional public void triada(String body){var e=mapper.readValue(body,Envelope.class);e.validar("ColetaTriada");inbox.registrarSeNovo(e.messageId().toString(),e.type());}
+ @RabbitListener(queues="solicitacoes.destinada") @Transactional public void destinada(String body){var e=mapper.readValue(body,Envelope.class);e.validar("ColetaDestinada");inbox.registrarSeNovo(e.messageId().toString(),e.type());}
 }

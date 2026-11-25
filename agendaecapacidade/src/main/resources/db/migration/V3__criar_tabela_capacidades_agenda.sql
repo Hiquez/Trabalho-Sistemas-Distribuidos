@@ -1,9 +1,9 @@
 CREATE TABLE capacidades_agenda (
-    id UUID PRIMARY KEY,
-    bairro VARCHAR(255) NOT NULL,
+    id RAW(16) PRIMARY KEY,
+    bairro VARCHAR2(255) NOT NULL,
     data_coleta DATE NOT NULL,
     capacidade_total INTEGER NOT NULL,
-    vagas_reservadas INTEGER NOT NULL DEFAULT 0,
+    vagas_reservadas INTEGER DEFAULT 0 NOT NULL,
 
     CONSTRAINT uk_bairro_data
         UNIQUE (bairro, data_coleta),

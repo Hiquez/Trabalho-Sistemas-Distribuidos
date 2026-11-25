@@ -38,9 +38,9 @@ public class SolicitacaoService {
         );
 
         try {
-            String payload = objectMapper.writeValueAsString(evento);
+            String payload = objectMapper.writeValueAsString(br.com.coleta.sistemas.solicitacoes.Dto.Envelope.criar(salva.getId(), "SolicitacaoCriada", java.util.Map.of("solicitacaoId",salva.getId(),"bairro",salva.getBairro(),"dataColeta",salva.getDataColeta().toString())));
             OutboxEvento outbox = new OutboxEvento(
-                    salva.getId(), "SOLICITACAO_CRIADA", payload
+                    salva.getId(), "solicitacao.criada", payload
             );
 
             outboxEventoRepository.save(outbox);

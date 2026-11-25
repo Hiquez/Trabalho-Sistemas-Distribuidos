@@ -1,1 +1,1 @@
-ALTER TABLE reservas RENAME TO agendas;
+SELECT 1 FROM dual;

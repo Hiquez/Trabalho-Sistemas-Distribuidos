@@ -12,6 +12,8 @@ import java.util.UUID;
 
 public interface SolicitacaoRespository extends JpaRepository<Solicitacao, UUID> {
 
+    @Query("select s.id from Solicitacao s where s.prazo <= :agora and s.status = br.com.coleta.sistemas.solicitacoes.Entity.StatusSolicitacao.AGUARDANDO_COOPERATIVA")
+    java.util.List<UUID> expiradas(@Param("agora") java.time.Instant agora);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT s FROM Solicitacao s WHERE s.id = :id")
     Optional<Solicitacao> buscarPorIdComBloqueio(@Param("id") UUID id);

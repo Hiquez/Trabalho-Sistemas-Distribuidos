@@ -23,7 +23,8 @@ public class OutboxEvento {
     @Column(name = "tipo_evento", nullable = false)
     private String tipoEvento;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @jakarta.persistence.Lob
+    @Column(nullable = false, columnDefinition = "CLOB")
     private String payload;
 
     @Column(nullable = false)
@@ -38,7 +39,8 @@ public class OutboxEvento {
     @Column(nullable = false)
     private int tentativas = 0;
 
-    @Column(name = "ultimo_erro", columnDefinition = "TEXT")
+    @jakarta.persistence.Lob
+    @Column(name = "ultimo_erro", columnDefinition = "CLOB")
     private String ultimoErro;
 
     @Column(name = "processamento_id")

@@ -1,6 +1,5 @@
 ALTER TABLE outbox_eventos
-ADD COLUMN processamento_id UUID,
-ADD COLUMN processando_em TIMESTAMP;
+ADD (processamento_id RAW(16), processando_em TIMESTAMP);
 
 CREATE INDEX idx_outbox_processamento
 ON outbox_eventos (processamento_id);
